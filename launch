@@ -42,6 +42,18 @@ _platform_mattlaptop_setup() {
 }
 
 
+_platform_omarlaptop_match() {
+
+  [[ $(uname -n) =~ MAC130285 ]] || return 1
+}
+
+
+_platform_omarlaptop_setup() {
+
+  export FC=/usr/local/gfortran/bin/gfortran
+}
+
+
 _platform_perlmutter_match() {
 
   [[ $LMOD_SYSHOST =~ perlmutter ]] || return 1
@@ -75,6 +87,29 @@ _scenario_gpu_trial1_mattlaptop_build() {
 
 
 _scenario_gpu_trial1_mattlaptop_run() {
+
+  echo
+}
+
+
+_scenario_gpu_trial1_omarlaptop_build() {
+
+  rm -rf ./build
+  mkdir ./build && cd $_
+
+  cmake \
+      -DCMAKE_BUILD_TYPE="Debug" \
+      -DCMAKE_Fortran_FLAGS="-fPIC -I -O3 -DHDF5_DOUBLE_PRECISION" \
+    ..
+
+  [[ $? -eq 0 ]] && make
+
+  LAUNCHKIT_RUNTIME_PATH_EXE="$(pwd -P)/build/bin/xkorc"
+  cd - >/dev/null
+}
+
+
+_scenario_gpu_trial1_omarlaptop_run() {
 
   echo
 }
@@ -140,8 +175,9 @@ __platform_match() {
 
   [[ -n $LAUNCHKIT_PLATFORM ]] && return
 
-  _platform_perlmutter_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="perlmutter"
   _platform_mattlaptop_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="mattlaptop"
+  _platform_omarlaptop_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="omarlaptop"
+  _platform_perlmutter_match && let "match_count+=1" && LAUNCHKIT_PLATFORM="perlmutter"
 
   [[ ${match_count} -eq 1 ]] || _error_fatal "unable to select platform"
 }
